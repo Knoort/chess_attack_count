@@ -79,14 +79,12 @@ class ChessMan:
             attack_fields_list.append([i, j])
 
         return attack_fields_list
+    
+    def selected_func(self, func, x, y):
+        process_list = func(x, y)
+        return process_list
 
-
-
-
-class Castle(ChessMan):
-    '''Ладья'''
-
-    def under_attack(self, place:str):
+    def _func_stack(self, place, *attack_func):
 
         # Проверка, что попали в поле
         x, y = self.field_verify(place)
@@ -94,12 +92,22 @@ class Castle(ChessMan):
             return []
 
         # Общий список полей
-        attack_list = self._create_plus_list(x, y)
+        attack_list = []
+        for func in attack_func:
+            attack_list.extend(func(x,y))
 
         # Удаление повторяющихся, и собственного поля
         attack_uniq_list = self._remove_dups(attack_list, x, y)
-
         return attack_uniq_list
+        
+
+class Castle(ChessMan):
+    '''Ладья'''
+
+    def under_attack(self, place:str):
+
+        attack_list = self._func_stack(place, self._create_plus_list)
+        return attack_list
 
 class Elephant(ChessMan):
     '''Слон'''
@@ -126,15 +134,15 @@ def runner():
     # ChessMan1 = ChessMan()
     # limit = ChessMan1()._create_cross_list(1,1)
     # print(limit)
-    place1 = 'C4'
+    place1 = 'C3'
 
     Castle1 = Castle()
     attack = Castle1.under_attack(place1)
     print(attack)
 
-    Elephant1 = Elephant()
-    attack = Elephant1.under_attack(place1)
-    print(attack)
+    # Elephant1 = Elephant()
+    # attack = Elephant1.under_attack(place1)
+    # print(attack)
 
 
 
