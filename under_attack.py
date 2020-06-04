@@ -1,5 +1,5 @@
 class ChessMan():
-    '''Общий класс для фигур'''
+    '''Шахматная фигура'''
 
     BOARD_SIZE = 8
     letter_idx = (
@@ -25,30 +25,9 @@ class ChessMan():
 
         return [x, y]
 
-    def _remove_dups(self, fields_list = [], x = None, y = None):
-        '''Функция удаления повторяющихся полей, и собственного поля.'''
-
-        if fields_list == []:
-            return fields_list
-        uniq_list = []
-        for i in range(len(fields_list)):
-            if fields_list[i] not in uniq_list:
-                uniq_list.append(fields_list[i])
-
-        return uniq_list
-
-    # def _remove_self(self, fields_list, x = None, y = None):
-    #     if (
-    #         (x is not None) and
-    #         (y is not None) and
-    #         ([x, y] in fields_list)
-    #     ):
-    #         fields_list.remove([x, y])
-    #     return fields_list
-
     def _create_plus_list(self, x, y):
         '''Функция ладьи. Получает абстрактные координаты,
-        возвращает список координат полей под атакой.'''
+        возвращает список полей под атакой.'''
 
         fields_list = []
         # Суммируем строку
@@ -62,7 +41,7 @@ class ChessMan():
     
     def _create_cross_list(self, x, y):
         '''Функция слона. Получает абстрактные координаты,
-        возвращает список координат полей под атакой. '''
+        возвращает список полей под атакой. '''
 
         fields_list = []
         # Определяем диапазон, перебираем главную диагональ
@@ -106,7 +85,7 @@ class ChessMan():
         if attack_func is Horse._create_horse_list:
             return fields_list
         # В остальных удаление повторяющихся полей
-        fields_list = self._remove_dups(fields_list)
+        fields_list = dupl_rm(fields_list)
         # и собственного поля
         if [x, y] in fields_list:
             fields_list.remove([x, y])
@@ -118,17 +97,8 @@ class Castle(ChessMan):
     '''Ладья'''
 
     def under_attack(self, place:str):
-        # Передаем список функций атаки
+        '''Список полей атаки ладьи'''
         fields_list = self._func_stack(place, self._create_plus_list)
-        return fields_list
-
-
-class Elephant(ChessMan):
-    '''Слон'''
-
-    def under_attack(self, place:str):
-        # Передаем список функций атаки
-        fields_list = self._func_stack(place, self._create_cross_list)
         return fields_list
 
 
@@ -136,7 +106,7 @@ class Queen(ChessMan):
     '''Ферзь'''
 
     def under_attack(self, place:str):
-        # Передаем список функций атаки
+        '''Список полей атаки ферзя'''
         fields_list = self._func_stack(
             place,
             self._create_plus_list,
@@ -148,13 +118,14 @@ class Queen(ChessMan):
 class Horse(ChessMan):
     '''Лошадь'''
 
+    # Куда ходит:
     horse_code = (
         +1, +2, -2, -1
     )
 
     def _create_horse_list(self, x, y):
         '''Функция коня. Получает абстрактные координаты,
-         возвращает список координат полей под атакой.'''
+         возвращает список полей под атакой.'''
 
         fields_list = []
         for bin_code in range(2 ** 4):
@@ -176,23 +147,30 @@ class Horse(ChessMan):
         return fields_list
 
     def under_attack(self, place:str):
-        # Передаем список функций атаки
+        # Передаем список функций атаки фигуры
         fields_list = self._func_stack(place, self._create_horse_list)
         return fields_list
 
+def dupl_rm(fields_list):
+    '''Функция удаления дубликатов.'''
+    uniq_list = []
+    for i in range(len(fields_list)):
+        if fields_list[i] not in uniq_list:
+            uniq_list.append(fields_list[i])
+
+    return uniq_list
 
 def attack_set_calc(places_set:str, *figures):
+
     places_list = places_set.split(' ')
     if len(places_list) != len(figures):
         return []
-    print(places_list)
+    # Собираем список
     fields_list = []
     for idx in range(len(places_list)):
         fields_list.extend(figures[idx].under_attack(places_list[idx]))
-        print(fields_list)
-        print(idx)
-        fields_list = figures[idx]._remove_dups(fields_list)
-    
+        fields_list = dupl_rm(fields_list)
+    # Удаляем поля фигур
     for idx in range(len(places_list)):
         x, y = figures[idx].field_verify(places_list[idx])
         if [x, y] in fields_list:
@@ -203,35 +181,29 @@ def attack_set_calc(places_set:str, *figures):
 
 def runner():
 
-    queen_place = 'D1'
-    castle_place = 'D3'
-    horse_place = 'E5'
-    input_places_set = f'{queen_place} {castle_place} {horse_place}'
-    input_places_set = 'D1 D3 E5'
-
+    input_places_sets = [
+        'D1 D3 E5',
+        'A1 H8 B6',
+        'H7 F8 G6',
+        'F6 E4 H1'
+    ]
  
     Queen1 = Queen()
     Castle1 = Castle()
     Horse1 = Horse()
-    
-    attack_set = attack_set_calc(
-        input_places_set,
-        Queen1,
-        Castle1,
-        Horse1
-    )
-    print('Итоговый сет:')
-    print(attack_set)
-    print(len(attack_set))
-    print('Ферзь:')
-    queen_attack = Queen1.under_attack(queen_place)
-    print(queen_attack)
-    print('Ладья:')
-    attack = Castle1.under_attack(castle_place)
-    print(attack)
-    print('Конь:')
-    attack = Horse1.under_attack(horse_place)
-    print(attack)
+
+    for inp_set in input_places_sets:
+        attack_set = attack_set_calc(
+            inp_set,
+            Queen1,
+            Castle1,
+            Horse1
+        )
+        print(inp_set)
+        print('Итоговый сет:')
+        print(attack_set)
+        print(len(attack_set))
+        print()
 
 
 if __name__ == '__main__':
