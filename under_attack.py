@@ -1,4 +1,4 @@
-class ChessMan:
+class ChessMan():
     '''Общий класс для фигур'''
 
     BOARD_SIZE = 4
@@ -8,10 +8,11 @@ class ChessMan:
     number_idx = (
         '1', '2', '3', '4', '5', '6', '7', '8'
     )
-    def __init__(self):
-        pass
-
+    # def __init__(self):
+    #     pass
+    
     def field_verify(self, place:str):
+        '''Проверка попадания в поле. Возвращает абстрактные координаты'''
         if (
             (len(place) != 2) or
             (place[0] not in self.letter_idx) or
@@ -26,6 +27,7 @@ class ChessMan:
         return [x, y]
 
     def _remove_dups(self, fields_list, x, y):
+        '''Функция удаления повторяющихся полей, и собственного поля.'''
 
         uniq_list = []
         for i in range(len(fields_list)):
@@ -35,8 +37,8 @@ class ChessMan:
         uniq_list.remove([x, y])
         return uniq_list
 
-    # Функция ладьи
     def _create_plus_list(self, x, y):
+        '''Функция ладьи.'''
 
         attack_fields_list = []
         # Суммируем строку
@@ -48,12 +50,13 @@ class ChessMan:
 
         return attack_fields_list
 
-    # Функция слона
+    
     def _create_cross_list(self, x, y):
+        '''Функция слона.'''
+
         attack_fields_list = []
 
-        # Main diag
-        # Определяем диапазон, перебираем диагональ
+        # Определяем диапазон, перебираем главную диагональ
         xmin = x - y
         xmax = x + (self.BOARD_SIZE - 1 - y)
         xmin = max(0, xmin)
@@ -65,8 +68,7 @@ class ChessMan:
             j = y + (i - x)
             attack_fields_list.append([i, j])
 
-        # Side diag
-        # Определяем диапазон, перебираем диагональ
+        # Определяем диапазон, перебираем побочную диагональ
         xmin = x - (self.BOARD_SIZE - 1 - y)
         xmax = x + y
         xmin = max(0, xmin)
@@ -80,11 +82,8 @@ class ChessMan:
 
         return attack_fields_list
     
-    def selected_func(self, func, x, y):
-        process_list = func(x, y)
-        return process_list
-
     def _func_stack(self, place, *attack_func):
+        '''Стек обработки фигуры.'''
 
         # Проверка, что попали в поле
         x, y = self.field_verify(place)
@@ -96,7 +95,7 @@ class ChessMan:
         for func in attack_func:
             attack_list.extend(func(x,y))
 
-        # Удаление повторяющихся, и собственного поля
+        # Удаление повторяющихся полей, и собственного поля
         attack_uniq_list = self._remove_dups(attack_list, x, y)
         return attack_uniq_list
         
@@ -105,44 +104,47 @@ class Castle(ChessMan):
     '''Ладья'''
 
     def under_attack(self, place:str):
-
+        # Передаем список функций атаки
         attack_list = self._func_stack(place, self._create_plus_list)
         return attack_list
+
 
 class Elephant(ChessMan):
     '''Слон'''
 
     def under_attack(self, place:str):
+        # Передаем список функций атаки
+        attack_list = self._func_stack(place, self._create_cross_list)
 
-        # Проверка, что попали в поле
-        x, y = self.field_verify(place)
-        if x is None:
-            return []
+        return attack_list
 
-        # Общий список полей
-        attack_list = self._create_cross_list(x, y)
 
-        # Удаление повторяющихся, и собственного поля
-        attack_uniq_list = self._remove_dups(attack_list, x, y)
+class Queen(ChessMan):
+    '''Ферзь'''
 
-        return attack_uniq_list
+    def under_attack(self, place:str):
+        # Передаем список функций атаки
+        attack_list = self._func_stack(place, self._create_plus_list, self._create_cross_list)
 
+        return attack_list
 
 
 def runner():
 
-    # ChessMan1 = ChessMan()
-    # limit = ChessMan1()._create_cross_list(1,1)
-    # print(limit)
-    place1 = 'C3'
+    place1 = 'C2'
 
     Castle1 = Castle()
     attack = Castle1.under_attack(place1)
     print(attack)
 
-    # Elephant1 = Elephant()
-    # attack = Elephant1.under_attack(place1)
-    # print(attack)
+    Elephant1 = Elephant()
+    attack = Elephant1.under_attack(place1)
+    print(attack)
+
+    Queen1 = Queen()
+    attack = Queen1.under_attack(place1)
+    print(attack)
+
 
 
 
