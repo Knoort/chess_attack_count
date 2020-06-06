@@ -1,7 +1,26 @@
-class ChessMan():
+class Chessboard:
+
+    FIRST_LETTER_CODE = ord('A')
+
+    def __init__(self, size = 8):
+        self.SIZE = min(size, 26)
+        self.letter_idx = [
+            chr(ucode + self.FIRST_LETTER_CODE)
+            for ucode in range(self.SIZE)
+        ]
+        board_str = [
+            '0'
+            for i in range(self.SIZE)
+        ]
+        self.board = []
+        for j in range(self.SIZE):
+            self.board.append(board_str)
+            
+
+class ChessMan:
     '''Шахматная фигура'''
 
-    BOARD_SIZE = 8
+    BOARD_SIZE = 20
     letter_idx = (
         'A', 'B', 'C', 'D', 'F', 'E', 'G', 'H'
     )
@@ -95,6 +114,8 @@ class ChessMan():
 
 class Castle(ChessMan):
     '''Ладья'''
+    # def __str__(self):
+    #     re
 
     def under_attack(self, place:str):
         '''Список полей атаки ладьи'''
@@ -144,6 +165,7 @@ class Horse(ChessMan):
                 dy in range(self.BOARD_SIZE)
             ):
                 fields_list.append([dx, dy])
+
         return fields_list
 
     def under_attack(self, place:str):
@@ -205,6 +227,12 @@ def runner():
         print(len(attack_set))
         print()
 
+        Chessboard1 = Chessboard(10)
+
+        print(Chessboard1.letter_idx)
+        for i in range(Chessboard1.SIZE):
+            print(' '.join(Chessboard1.board[i]))
+         
 
 if __name__ == '__main__':
     runner()
