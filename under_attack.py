@@ -15,7 +15,7 @@ class Chessboard():
     def _board_clear(self):
          self.board = [['0' for i in range(self.SIZE)] for j in range(self.SIZE)]
 
-    def put_figure(self, Figure, place:str):
+    def field_verify(self, place:str):
         '''Проверка попадания в поле. Возвращает абстрактные координаты'''
         y = int(place[1]) - 1
         if (
@@ -24,19 +24,24 @@ class Chessboard():
             y not in range(len(self.letter_idx))
         ):
             return [None, None]
-
         x = self.letter_idx.index(place[0])
-        #    if max(x, y) >= self.BOARD_SIZE:
-        #     return [None, None]
+        return [x, y]
+
+    def put_figure(self, Figure, place:str):
+        '''Функция установки фигур на доске. Размещает полученную фигуру
+        в поле и в списке фигур'''
+
+        x, y = self.field_verify(place)
+        if x is None:
+            return
 
         self.board[y][x] = Figure.name[0] #symb()
         self.figures_card[Figure.name] = [x, y]
-       
-        return [x, y]
 
     def clear(self):
         self.figures_card.clear()
         self.board = [['0' for i in range(self.SIZE)] for j in range(self.SIZE)]
+
 
 class ChessMan:
     '''Шахматная фигура'''
@@ -235,20 +240,19 @@ def attack_set_calc(places_set:str, *figures):
 
 def runner():
 
-    input_places_sets = [
-        # 'D1 D3 E5',
-        # 'A1 H8 B6',
-        # 'H7 F8 G6',
-        'C5 B4 G2'
-    ]
-
-    Chessboard1 = Chessboard(10)
-
+    Chessboard1 = Chessboard(8)
     Queen1 = Queen('Queen')
     Castle1 = Castle('Castle')
     Horse1 = Horse('Horse')
 
     figures_set = [Queen1, Castle1, Horse1]
+
+    input_places_sets = [
+        # 'D1 D3 E5',
+        # 'A1 H8 B6',
+        # 'H7 F8 G6',
+        'F8 B9 G2'
+    ]
 
     places_list = input_places_sets[0].split(' ')
     print(places_list)
