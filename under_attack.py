@@ -46,14 +46,7 @@ class Chessboard():
 class ChessMan:
     '''Шахматная фигура'''
     SYMB_UCODE = 0
-    BOARD_SIZE = 20
-    letter_idx = (
-        'A', 'B', 'C', 'D', 'F', 'E', 'G', 'H'
-    )
-    number_idx = (
-        '1', '2', '3', '4', '5', '6', '7', '8'
-    )
-
+ 
     def __init__(self, name:str):
         self.name = name
     def __str__(self):
@@ -62,87 +55,7 @@ class ChessMan:
     def symb(self):
         return chr(self.SYMB_UCODE)
 
-    def field_verify(self, place:str):
-        '''Проверка попадания в поле. Возвращает абстрактные координаты'''
-        if (
-            (len(place) != 2) or
-            (place[0] not in self.letter_idx) or
-            (place[1] not in self.number_idx)
-        ):
-            return [None, None]
-        x = self.letter_idx.index(place[0])
-        y = self.number_idx.index(place[1])
-        if max(x, y) >= self.BOARD_SIZE:
-            return [None, None]
 
-        return [x, y]
-
-    def _create_plus_list(self, x, y):
-        '''Функция ладьи. Получает абстрактные координаты,
-        возвращает список полей под атакой.'''
-
-        fields_list = []
-        # Суммируем строку
-        for i in range(self.BOARD_SIZE):
-            fields_list.append([i, y])
-        # Суммируем стобец
-        for j in range(self.BOARD_SIZE):
-            fields_list.append([x, j])
-        return fields_list
-
-    
-    def _create_cross_list(self, x, y):
-        '''Функция слона. Получает абстрактные координаты,
-        возвращает список полей под атакой. '''
-
-        fields_list = []
-        # Определяем диапазон, перебираем главную диагональ
-        xmin = x - y
-        xmax = x + (self.BOARD_SIZE - 1 - y)
-        xmin = max(0, xmin)
-        xmax = min(xmax, self.BOARD_SIZE - 1)
-        if xmax < xmin:
-            return fields_list
-
-        for i in range(xmin, xmax +1):
-            j = y + (i - x)
-            fields_list.append([i, j])
-        # Определяем диапазон, перебираем побочную диагональ
-        xmin = x - (self.BOARD_SIZE - 1 - y)
-        xmax = x + y
-        xmin = max(0, xmin)
-        xmax = min(xmax, self.BOARD_SIZE - 1)
-        if xmax < xmin:
-            return fields_list
-
-        for i in range(xmin, xmax +1):
-            j = y - (i - x)
-            fields_list.append([i, j])
-        return fields_list
-    
-    def _func_stack(self, place, *attack_func):
-        '''Стек обработки фигуры.'''
-  
-        # Проверка, что попали в поле
-        x, y = self.field_verify(place)
-        if x is None:
-            return []
-
-        # Общий список полей
-        fields_list = []
-        for func in attack_func:
-            fields_list.extend(func(x,y))
-
-        # В лошади ничего не удаляем
-        if attack_func is Horse._create_horse_list:
-            return fields_list
-        # В остальных удаление повторяющихся полей
-        fields_list = dupl_rm(fields_list)
-        # и собственного поля
-        if [x, y] in fields_list:
-            fields_list.remove([x, y])
-        # fields_list = self._remove_self(fields_list, x, y)
-        return fields_list
         
 
 class Castle(ChessMan):
@@ -150,9 +63,17 @@ class Castle(ChessMan):
 
     SYMB_UCODE = 9820
 
-    def under_attack(self, place:str):
+    def under_attack(self, board_size):
         '''Список полей атаки ладьи'''
-        fields_list = self._func_stack(place, self._create_plus_list)
+
+        attack_list = []
+        attack_dir = [[i, 0] for i in range(1, b_size)]
+        attack_list.append(attack_dir)
+        attack_dir = [[-i, 0] for i in range(1, b_size)]
+        attack_list.append(attack_dir)
+
+        
+
         return fields_list
 
 
@@ -273,9 +194,6 @@ def runner():
     print('    ',' '.join(Chessboard1.letter_idx))
     for i in range(Chessboard1.SIZE):
         print(f'{i+1:{0}{2}}  ',' '.join(Chessboard1.board[i]))
-
-
-
 
 
     # for inp_pset in input_places_sets:
