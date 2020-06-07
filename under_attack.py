@@ -15,6 +15,10 @@ class Chessboard():
     def _board_clear(self):
          self.board = [['0' for i in range(self.SIZE)] for j in range(self.SIZE)]
 
+    def clear(self):
+        self.figures_card.clear()
+        self._board_clear()
+
     def field_verify(self, place:str):
         '''Проверка попадания в поле. Возвращает абстрактные координаты'''
         y = int(place[1]) - 1
@@ -36,34 +40,51 @@ class Chessboard():
             return
 
         self.board[y][x] = Figure.name[0] #symb()
-        self.figures_card[Figure.name] = [x, y]
+        self.figures_card[Figure] = [x, y]
 
-    def clear(self):
-        self.figures_card.clear()
-        self.board = [['0' for i in range(self.SIZE)] for j in range(self.SIZE)]
+    def figures_attack(self):
+        for fig in self.figures_card:
+            print()
+            for attack_dir in fig.under_attack(self.SIZE):
+                # print(attack_dir)
+                for idx in range(len(attack_dir)):
+                    x = self.figures_card[fig][0] + attack_dir[idx][0]
+                    if x not in range(self.SIZE):
+                        break
+                    y = self.figures_card[fig][1]+ attack_dir[idx][1]
+                    if y not in range(self.SIZE):
+                        break
+                    if self.board[y][x] == '1':
+                        print('continue')
+                        continue
+                    elif self.board[y][x] == '0':
+                        self.board[y][x] = '1'
+                        print('set 1')
+                        continue
+                    break
 
 
 class ChessMan:
     '''Шахматная фигура'''
-    SYMB_UCODE = 0
- 
+    SYMB_UCODE_BLACK = 0
+    SYMB_UCODE_WHITE = 0
+
     def __init__(self, name:str):
         self.name = name
     def __str__(self):
         return self.name
 
     def symb(self):
-        return chr(self.SYMB_UCODE)
-
-
+        return chr(self.SYMB_UCODE_WHITE)
         
 
 class Castle(ChessMan):
     '''Ладья'''
 
-    SYMB_UCODE = 9820
+    SYMB_UCODE_BLACK = 9814
+    SYMB_UCODE_WHITE = 9820
 
-    def under_attack(self, board_size):
+    def under_attack(self, b_size):
         '''Список полей атаки ладьи'''
 
         attack_list = []
@@ -71,25 +92,47 @@ class Castle(ChessMan):
         attack_list.append(attack_dir)
         attack_dir = [[-i, 0] for i in range(1, b_size)]
         attack_list.append(attack_dir)
+        attack_dir = [[0, i] for i in range(1, b_size)]
+        attack_list.append(attack_dir)
+        attack_dir = [[0, -i] for i in range(1, b_size)]
+        attack_list.append(attack_dir)
+        return attack_list
 
-        
 
-        return fields_list
+class Elephant(ChessMan):
+    '''Слон'''
+
+    SYMB_UCODE_BLACK = 9815
+    SYMB_UCODE_WHITE = 9821
+
+    def under_attack(self, b_size):
+        '''Список полей атаки слона'''
+
+        attack_list = []
+        attack_dir = [[i, i] for i in range(1, b_size)]
+        attack_list.append(attack_dir)
+        attack_dir = [[-i, i] for i in range(1, b_size)]
+        attack_list.append(attack_dir)
+        attack_dir = [[i, -i] for i in range(1, b_size)]
+        attack_list.append(attack_dir)
+        attack_dir = [[-i, -i] for i in range(1, b_size)]
+        attack_list.append(attack_dir)
+        return attack_list
 
 
-class Queen(ChessMan):
+class Queen(Elephant):
     '''Ферзь'''
 
-    SYMB_UCODE = 9819
+    SYMB_UCODE_WHITE = 9819
+    SYMB_UCODE_BLACK = 9813
 
-    def under_attack(self, place:str):
+    def under_attack(self, b_size):
         '''Список полей атаки ферзя'''
-        fields_list = self._func_stack(
-            place,
-            self._create_plus_list,
-            self._create_cross_list
-        )
-        return fields_list
+        print(b_size)
+        attack_list = []
+        # attack_list.append(Castle.under_attack(b_size))
+        attack_list = super().under_attack(b_size)
+        return attack_list
 
 
 class Horse(ChessMan):
@@ -164,15 +207,17 @@ def runner():
     Chessboard1 = Chessboard(8)
     Queen1 = Queen('Queen')
     Castle1 = Castle('Castle')
-    Horse1 = Horse('Horse')
+    # Castle2 = Castle('Castle')
+    Elephant1 = Elephant('Elephant')
+    # Horse1 = Horse('Horse')
 
-    figures_set = [Queen1, Castle1, Horse1]
+    figures_set = [Queen1, Elephant1]
 
     input_places_sets = [
         # 'D1 D3 E5',
         # 'A1 H8 B6',
         # 'H7 F8 G6',
-        'F8 B9 G2'
+        'C5 F5 G2'
     ]
 
     places_list = input_places_sets[0].split(' ')
@@ -180,7 +225,7 @@ def runner():
 
     place_idx = [
         Chessboard1.put_figure(figures_set[i], places_list[i])
-        for i in range(len(places_list))
+        for i in range(min(len(places_list), len(figures_set)))
     ]
     print(place_idx)
     print(Chessboard1.figures_card)
@@ -189,8 +234,11 @@ def runner():
     for i in range(Chessboard1.SIZE):
         print(f'{i+1:{0}{2}}  ',' '.join(Chessboard1.board[i]))
     print()
-    Chessboard1.clear()
+
+
+    Chessboard1.figures_attack()
     print(Chessboard1.figures_card)
+
     print('    ',' '.join(Chessboard1.letter_idx))
     for i in range(Chessboard1.SIZE):
         print(f'{i+1:{0}{2}}  ',' '.join(Chessboard1.board[i]))
