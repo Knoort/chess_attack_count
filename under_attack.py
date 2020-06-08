@@ -24,9 +24,6 @@ class Chessboard():
 
         if len(place) not in (2, 3):
             return [None, None]
-        # if len(place) == 2:
-        #     y = int(place[1]) - 1
-        # elif len(place) == 3:
 
         y = int(place[1:]) - 1           
         if (
@@ -43,12 +40,14 @@ class Chessboard():
 
         x, y = self.field_verify(place)
         if x is not None:
-            self.board[y][x] = Figure.name[0] #symb()
+            self.board[y][x] = Figure.name[0]
             self.figures_card[Figure] = [x, y]
 
         return [x, y]
 
     def figures_attack(self):
+        '''Функция расчета полей атаки для всех фигур на поле.
+        Возвращает общее число полей атаки.'''
         attack_field_cnt = 0
         for fig in self.figures_card:
             # Перебор фигур на доске
@@ -77,23 +76,13 @@ class Chessboard():
 
 class ChessMan:
     '''Шахматная фигура'''
-    SYMB_UCODE_BLACK = 0
-    SYMB_UCODE_WHITE = 0
 
     def __init__(self, name:str):
         self.name = name
-    def __str__(self):
-        return self.name
 
-    def symb(self):
-        return chr(self.SYMB_UCODE_WHITE)
-        
 
 class Castle(ChessMan):
     '''Ладья'''
-
-    SYMB_UCODE_BLACK = 9814
-    SYMB_UCODE_WHITE = 9820
 
     def under_attack(self, b_size):
         '''Список полей атаки ладьи'''
@@ -113,9 +102,6 @@ class Castle(ChessMan):
 class Elephant(ChessMan):
     '''Слон'''
 
-    SYMB_UCODE_BLACK = 9815
-    SYMB_UCODE_WHITE = 9821
-
     def under_attack(self, b_size):
         '''Список полей атаки слона'''
 
@@ -134,9 +120,6 @@ class Elephant(ChessMan):
 class Queen(Elephant, Castle):
     '''Ферзь'''
 
-    SYMB_UCODE_WHITE = 9819
-    SYMB_UCODE_BLACK = 9813
-
     def under_attack(self, b_size):
         '''Список полей атаки ферзя'''
         
@@ -148,9 +131,6 @@ class Queen(Elephant, Castle):
 
 class Horse(ChessMan):
     '''Лошадь'''
-
-    SYMB_UCODE_BLACK = 9816
-    SYMB_UCODE_WHITE = 9822
 
     # Куда ходит:
     horse_step = (
@@ -164,10 +144,7 @@ class Horse(ChessMan):
 
 
 class King(ChessMan):
-    '''Лошадь'''
-
-    SYMB_UCODE_BLACK = 9816
-    SYMB_UCODE_WHITE = 9822
+    '''Король'''
 
     # Куда ходит:
     king_step = (
@@ -189,6 +166,8 @@ def runner():
     Elephant1 = Elephant('Elephant')
     King1 = King('King')
 
+    # Можно записать любое число фигур
+    # Выполнение по числу полученных полей в списке
     figures_set = [Queen1, Castle1, Horse1]
 
     input_places_sets = [
@@ -196,9 +175,10 @@ def runner():
         'A1 H8 B6',
         'H7 F8 G6',
         'F6 E4 H1',
-        # 'F2 D4 E6'
+        # 'K12 N19 E6'
     ]
 
+    # Расчет для всех входных списков полей
     for input_set in input_places_sets:
         places_list = input_set.split(' ')
 
@@ -225,4 +205,3 @@ def runner():
 
 if __name__ == '__main__':
     runner()
-
