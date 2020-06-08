@@ -21,9 +21,15 @@ class Chessboard():
 
     def field_verify(self, place:str):
         '''Проверка попадания в поле. Возвращает абстрактные координаты'''
-        y = int(place[1]) - 1
+
+        if len(place) not in (2, 3):
+            return [None, None]
+        # if len(place) == 2:
+        #     y = int(place[1]) - 1
+        # elif len(place) == 3:
+
+        y = int(place[1:]) - 1           
         if (
-            (len(place) != 2) or
             (place[0] not in self.letter_idx) or
             y not in range(len(self.letter_idx))
         ):
@@ -36,32 +42,37 @@ class Chessboard():
         в поле и в списке фигур'''
 
         x, y = self.field_verify(place)
-        if x is None:
-            return
+        if x is not None:
+            self.board[y][x] = Figure.name[0] #symb()
+            self.figures_card[Figure] = [x, y]
 
-        self.board[y][x] = Figure.name[0] #symb()
-        self.figures_card[Figure] = [x, y]
+        return [x, y]
 
     def figures_attack(self):
+        attack_field_cnt = 0
         for fig in self.figures_card:
-            print()
+            # Перебор фигур на доске
+
             for attack_dir in fig.under_attack(self.SIZE):
-                # print(attack_dir)
+                # Перебор направлений атаки для фигуры
+
                 for idx in range(len(attack_dir)):
+                    #Проверка направления
                     x = self.figures_card[fig][0] + attack_dir[idx][0]
+
                     if x not in range(self.SIZE):
                         break
                     y = self.figures_card[fig][1]+ attack_dir[idx][1]
                     if y not in range(self.SIZE):
                         break
                     if self.board[y][x] == '1':
-                        print('continue')
                         continue
                     elif self.board[y][x] == '0':
                         self.board[y][x] = '1'
-                        print('set 1')
+                        attack_field_cnt += 1
                         continue
                     break
+        return attack_field_cnt
 
 
 class ChessMan:
@@ -98,7 +109,7 @@ class Castle(ChessMan):
         attack_list.append(attack_dir)
         return attack_list
 
-
+ 
 class Elephant(ChessMan):
     '''Слон'''
 
@@ -120,7 +131,7 @@ class Elephant(ChessMan):
         return attack_list
 
 
-class Queen(Elephant):
+class Queen(Elephant, Castle):
     '''Ферзь'''
 
     SYMB_UCODE_WHITE = 9819
@@ -128,78 +139,45 @@ class Queen(Elephant):
 
     def under_attack(self, b_size):
         '''Список полей атаки ферзя'''
-        print(b_size)
-        attack_list = []
-        # attack_list.append(Castle.under_attack(b_size))
-        attack_list = super().under_attack(b_size)
+        
+        attack_list = Elephant.under_attack(self, b_size)
+        attack_list.extend(Castle.under_attack(self, b_size))
+
         return attack_list
 
 
 class Horse(ChessMan):
     '''Лошадь'''
 
-    SYMB_UCODE = 9822
+    SYMB_UCODE_BLACK = 9816
+    SYMB_UCODE_WHITE = 9822
 
     # Куда ходит:
-    horse_code = (
-        +1, +2, -2, -1
+    horse_step = (
+        ((1, 2),), ((1, -2),), ((2, 1),), ((2, -1),), ((-1, 2),), ((-1, -2),), ((-2, 1),), ((-2, -1),)
     )
 
-    def _create_horse_list(self, x, y):
-        '''Функция коня. Получает абстрактные координаты,
-         возвращает список полей под атакой.'''
+    def under_attack(self, b_size):
+        '''Список полей атаки коня'''
 
-        fields_list = []
-        for bin_code in range(2 ** 4):
-            i = (bin_code >> 2) & 0b11
-            j = bin_code & 0b11
+        return self.horse_step
 
-            if (
-                (i == j) or
-                (i == (~j) & 0b11)
-            ):
-                continue
-            dx = x + self.horse_code[i]
-            dy = y + self.horse_code[j]
-            if (
-                dx in range(self.BOARD_SIZE) and
-                dy in range(self.BOARD_SIZE)
-            ):
-                fields_list.append([dx, dy])
 
-        return fields_list
+class King(ChessMan):
+    '''Лошадь'''
 
-    def under_attack(self, place:str):
-        # Передаем список функций атаки фигуры
-        fields_list = self._func_stack(place, self._create_horse_list)
-        return fields_list
+    SYMB_UCODE_BLACK = 9816
+    SYMB_UCODE_WHITE = 9822
 
-def dupl_rm(fields_list):
-    '''Функция удаления дубликатов.'''
-    uniq_list = []
-    for i in range(len(fields_list)):
-        if fields_list[i] not in uniq_list:
-            uniq_list.append(fields_list[i])
+    # Куда ходит:
+    king_step = (
+        ((0, 1),), ((0, -1),), ((1, 1),), ((1, 0),), ((1, -1),), ((-1, 1),), ((-1, 0),), ((-1, -1),)
+    )
 
-    return uniq_list
+    def under_attack(self, b_size):
+        '''Список полей атаки короля'''
 
-def attack_set_calc(places_set:str, *figures):
-
-    places_list = places_set.split(' ')
-    if len(places_list) != len(figures):
-        return []
-    # Собираем список
-    fields_list = []
-    for idx in range(len(places_list)):
-        fields_list.extend(figures[idx].under_attack(places_list[idx]))
-        fields_list = dupl_rm(fields_list)
-    # Удаляем поля фигур
-    for idx in range(len(places_list)):
-        x, y = figures[idx].field_verify(places_list[idx])
-        if [x, y] in fields_list:
-            fields_list.remove([x, y])
-
-    return fields_list
+        return self.king_step
 
 
 def runner():
@@ -207,52 +185,42 @@ def runner():
     Chessboard1 = Chessboard(8)
     Queen1 = Queen('Queen')
     Castle1 = Castle('Castle')
-    # Castle2 = Castle('Castle')
+    Horse1 = Horse('Horse')
     Elephant1 = Elephant('Elephant')
-    # Horse1 = Horse('Horse')
+    King1 = King('King')
 
-    figures_set = [Queen1, Elephant1]
+    figures_set = [Queen1, Castle1, Horse1]
 
     input_places_sets = [
-        # 'D1 D3 E5',
-        # 'A1 H8 B6',
-        # 'H7 F8 G6',
-        'C5 F5 G2'
+        'D1 D3 E5',
+        'A1 H8 B6',
+        'H7 F8 G6',
+        'F6 E4 H1',
+        # 'F2 D4 E6'
     ]
 
-    places_list = input_places_sets[0].split(' ')
-    print(places_list)
+    for input_set in input_places_sets:
+        places_list = input_set.split(' ')
 
-    place_idx = [
-        Chessboard1.put_figure(figures_set[i], places_list[i])
-        for i in range(min(len(places_list), len(figures_set)))
-    ]
-    print(place_idx)
-    print(Chessboard1.figures_card)
+        Chessboard1.clear()
+        print()
 
-    print('    ',' '.join(Chessboard1.letter_idx))
-    for i in range(Chessboard1.SIZE):
-        print(f'{i+1:{0}{2}}  ',' '.join(Chessboard1.board[i]))
-    print()
+        figures_names_set = []
+        for i in range(min(len(places_list), len(figures_set))):
+            # Ставим фигуры на поле
+            Chessboard1.put_figure(figures_set[i], places_list[i])
+            figures_names_set.append(figures_set[i].name)
+        print('Фигуры в игре: ',' '.join(figures_names_set))
+        print('Поля фигур: ', ' '.join(places_list[:i+1]))
 
+        # Включаем атаку фигур
+        attack_cnt = Chessboard1.figures_attack()
 
-    Chessboard1.figures_attack()
-    print(Chessboard1.figures_card)
-
-    print('    ',' '.join(Chessboard1.letter_idx))
-    for i in range(Chessboard1.SIZE):
-        print(f'{i+1:{0}{2}}  ',' '.join(Chessboard1.board[i]))
-
-
-    # for inp_pset in input_places_sets:
-    #     places_list = inp_pset.split(' ')
-    #     print(places_list)
-    #     place_ind = []
-    #     for place in places_list[inp_pset]:
-    #         place_ind.append(Chessboard.put_figure(figures_set[place], place))
- 
-
-
+        # Вывод доски с полями атаки
+        print('    ',' '.join(Chessboard1.letter_idx))
+        for i in range(Chessboard1.SIZE):
+            print(f'{i+1:{0}{2}}  ',' '.join(Chessboard1.board[i]))
+        print('Число полей атаки: ', attack_cnt)
 
 
 if __name__ == '__main__':
